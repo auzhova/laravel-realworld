@@ -1,0 +1,936 @@
+openapi: 3.0.0
+
+servers:
+  - url: /api
+
+info:
+  description: Documentation-API
+  version: 1.0.0
+  title: RealWorld Documentation-API
+  contact:
+    email: a.uzhova@zebrains.team
+
+tags:
+  - name: Authentication / Registration
+    description: Методы для aутентификации / регистрации
+  - name: User
+    description: Методы для работы с пользователем
+  - name: Profile
+    description: Методы для работы с профилем пользователя
+  - name: Article
+    description: Методы для работы со статьями
+  - name: Tags
+    description: Методы для работы с тегами
+
+paths:
+  /users:
+    post:
+      tags:
+        - Authentication / Registration
+      security: []
+      summary: Регистрация пользователя
+      description: |
+        Запрос на регистрацию нового пользователя
+      responses:
+        '200':
+          description: Запрос авторизации выполнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterRequest'
+
+  /users/login:
+    post:
+      tags:
+        - Authentication / Registration
+      security: []
+      summary: Авторизация пользователя
+      description: |
+        Запрос на авторизацию пользователя
+      responses:
+        '200':
+          description: Запрос авторизации выполнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+
+  /users/logout:
+    post:
+      tags:
+        - Authentication / Registration
+      security: [{ bearerAuth: {  } }]
+      summary: Выход пользователя
+      description: |
+        Запрос на выход пользователя
+      responses:
+        '200':
+          description: Запрос выполнен
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /user:
+    get:
+      tags:
+        - User
+      security: [{ bearerAuth: {  } }]
+      summary: Получение информации о пользователе
+      description: Получение информации об авторизованном пользователе
+      responses:
+        '200':
+          description: Информация о пользователе получена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    put:
+      tags:
+        - User
+      security: [{ bearerAuth: {  } }]
+      summary: Обновление информации о пользователя
+      description: Обновление информации авторизованного пользователя
+      responses:
+        '200':
+          description: Информация о пользователе обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Ошибка обновления
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+
+  /profiles/{username}:
+    get:
+      tags:
+        - Profile
+      security: [{ bearerAuth: {  } }]
+      summary: Получение данных профиля пользователя по имени
+      parameters:
+        - $ref: '#/components/parameters/ProfileUsername'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Профиль не найден
+
+  /profiles/{username}/follow:
+    post:
+      tags:
+        - Profile
+      security: [{ bearerAuth: {  } }]
+      summary: Подписаться на пользователя
+      parameters:
+        - $ref: '#/components/parameters/ProfileUsername'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Профиль не найден
+    delete:
+      tags:
+        - Profile
+      security: [{ bearerAuth: {  } }]
+      summary: Отписаться от пользователя
+      parameters:
+        - $ref: '#/components/parameters/ProfileUsername'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Профиль не найден
+
+  /articles:
+    get:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Получение списка всех статей
+      description:
+        Данные отдаются в отсортированном виде, с возможностью фильтрации и разбиения на страницы
+      parameters:
+        - $ref: '#/components/parameters/TagQuery'
+        - $ref: '#/components/parameters/AuthorQuery'
+        - $ref: '#/components/parameters/FavoritedQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/OffsetQuery'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleListResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Создать статью
+      responses:
+        '200':
+          description: Статья создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Ошибка при создании статьи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleCreateRequest'
+
+  /articles/feed:
+    post:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Получение списка статей подписчиков
+      description: |
+        Данные отдаются в отсортированном виде, с возможностью разбиения на страницы
+      parameters:
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/OffsetQuery'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleListResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /article/{slug}:
+    get:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Получить данные по статье
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+    put:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Обновить данные по статье
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Ошибка при обновлении статьи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleUpdateRequest'
+    delete:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Удаление статьи
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Статья удалена
+        '400':
+          description: Ошибка при удалении статьи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+
+  /article/{slug}/comments:
+    get:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Получить комментарии по статье
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentListResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+    post:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Добавить комментрарий к статье
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          description: Ошибка при добавлении комментария
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+
+  /article/{slug}/comments/{id}:
+    delete:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Удаление комментария статьи
+      parameters:
+        - $ref: '#/components/parameters/Article'
+        - $ref: '#/components/parameters/CommentId'
+      responses:
+        '200':
+          description: Комментарий удален
+        '400':
+          description: Ошибка при удалении
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья или комменарий не найден
+
+  /article/{slug}/favorite:
+    post:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Добавить статью в избранное
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+    delete:
+      tags:
+        - Article
+      security: [{ bearerAuth: {  } }]
+      summary: Удалить статью из избранного
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        '200':
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Ошибка получения данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Статья не найдена
+
+  /tags:
+    get:
+      tags:
+        - Tags
+      security: []
+      summary: Получение списка тегов
+      responses:
+        '200':
+          description: Список тегов статей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagListReponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  responses:
+    UnauthorizedError:
+      description: Ошибка авторизации
+    ForbiddenError:
+      description: Ошибка доступа
+  schemas:
+    UserRegisterRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          type: object
+          required:
+            - username
+            - email
+            - password
+          properties:
+            username:
+              type: string
+              example: Jacob
+            email:
+              type: string
+              example: jake@jake.jake
+            password:
+              type: string
+              example: jakejake
+
+    UserLoginRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              example: jake@jake.jake
+            password:
+              type: string
+              example: jakejake
+
+    UserUpdateRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+              example: Jacob
+            email:
+              type: string
+              example: jake@jake.jake
+            password:
+              type: string
+              example: jakejake
+            bio:
+              type: string
+              example: I like to skateboard
+            image:
+              type: string
+              example: https://i.stack.imgur.com/xHWG8.jpg
+
+    UserResponse:
+      type: object
+      description: Данные авторизованного пользователя
+      properties:
+        user:
+          type: object
+          properties:
+            email:
+              type: string
+              description: Email
+              example: jakejake
+            token:
+              type: string
+              description: Токен
+              example: jwt.token.here
+            username:
+              type: string
+              description: Имя
+              example: jake
+            bio:
+              type: string
+              description: Биография
+              example: I work at statefarm
+            image:
+              type: string
+              description: Ссылка на изображение (аватар?) (null если нет)
+              example: null
+
+    ProfileResponse:
+      type: object
+      description: Данные профиля пользователя
+      properties:
+        profile:
+          type: object
+          properties:
+            username:
+              type: string
+              description: Имя
+              example: jake
+            bio:
+              type: string
+              description: Биография
+              example: I work at statefarm
+            image:
+              type: string
+              description: Ссылка на изображение (аватар?) (null если нет)
+              example: https://api.realworld.io/images/smiley-cyrus.jpg
+            following:
+              type: boolean
+              description: Следит за профилем пользователя
+              example: false
+
+    ArticleCreateRequest:
+      type: object
+      required:
+        - article
+      properties:
+        article:
+          type: object
+          required:
+            - title
+            - description
+            - body
+          properties:
+            title:
+              type: string
+              example: How to train your dragon
+            description:
+              type: string
+              example: Ever wonder how?
+            body:
+              type: string
+              example: You have to believe
+            tagList:
+              type: array
+              example: ["reactjs", "angularjs", "dragons"]
+              items:
+                type: string
+
+    ArticleUpdateRequest:
+      type: object
+      required:
+        - article
+      properties:
+        article:
+          type: object
+          properties:
+            title:
+              type: string
+              example: How to train your dragon
+            description:
+              type: string
+              example: Ever wonder how?
+            body:
+              type: string
+              example: You have to believe
+
+    ArticleResponse:
+      type: object
+      description: Данные по статье
+      properties:
+        article:
+          type: object
+          properties:
+            slug:
+              type: string
+              description: Slug
+              example: how-to-train-your-dragon
+            title:
+              type: string
+              description: Заголовок
+              example: How to train your dragon
+            description:
+              type: string
+              description: Описание
+              example: Ever wonder how?
+            body:
+              type: string
+              description: Тело статьи
+              example: It takes a Jacobian
+            tagList:
+              type: array
+              description: Теги
+              example: ["dragons", "training"]
+              items:
+                type: string
+            createdAt:
+              type: string
+              description: Дата создания
+              example: "2016-02-18T03:22:56.637Z"
+            updatedAt:
+              type: string
+              description: Дата обновления
+              example: "2016-02-18T03:48:35.824Z"
+            favorited:
+              type: boolean
+              description: В избранном
+              example: false
+            favoritesCount:
+              type: integer
+              description: Количество избранных
+            author:
+              $ref: '#/components/schemas/AuthorResponse'
+
+    ArticleListResponse:
+      type: object
+      description: Список статей
+      properties:
+        articlesCount:
+          type: integer
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticleResponse'
+
+    CommentCreateRequest:
+      type: object
+      required:
+        - comment
+      properties:
+        comment:
+          type: object
+          required:
+            - body
+          properties:
+            body:
+              type: string
+              example: His name was my name too.
+
+    AuthorResponse:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Имя
+          example: jake
+        bio:
+          type: string
+          description: Биография
+          example: I work at statefarm
+        image:
+          type: string
+          description: Ссылка на изображение (аватар?) (null если нет)
+          example: https://api.realworld.io/images/smiley-cyrus.jpg
+        following:
+          type: boolean
+          description: Следит за профилем пользователя
+          example: false
+
+    CommentResponse:
+      type: object
+      description: Данные комментария
+      properties:
+        comment:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: ID комментария
+              example: 1
+            createdAt:
+              type: string
+              description: Дата создания
+              example: "2016-02-18T03:22:56.637Z"
+            updatedAt:
+              type: string
+              description: Дата обновления
+              example: "2016-02-18T03:48:35.824Z"
+            body:
+              type: string
+              description: Комментарий
+              example: It takes a Jacobian
+            author:
+              $ref: '#/components/schemas/AuthorResponse'
+
+    CommentListResponse:
+      type: object
+      description: Список статей
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticleResponse'
+
+    TagListReponse:
+      type: object
+      description: Список тегов
+      properties:
+        tags:
+          type: array
+          description: Теги
+          example: ["reactjs",  "angularjs"]
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      description: Ошибка
+      properties:
+        message:
+          type: string
+          description: Текст ошибки
+
+    ValidationErrorResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ValidationErrorResponseItem'
+
+    ValidationErrorResponseItem:
+      type: object
+      properties:
+        fieldName:
+          type: string
+          description: Название поля
+        error:
+          type: string
+          description: Текст ошибки
+
+  parameters:
+    ProfileUsername:
+      name: username
+      in: path
+      description: Имя пользователя
+      required: true
+      schema:
+        type: string
+
+    Article:
+      name: slug
+      in: path
+      description: Конечная часть URL-адреса статьи
+      required: true
+      schema:
+        type: string
+
+    CommentId:
+      name: id
+      in: path
+      description: ID коментария статьи
+      required: true
+      schema:
+        type: integer
+
+    LimitQuery:
+      name: limit
+      in: query
+      description: Максимальное количество статей на странице
+      schema:
+        type: integer
+        minimum: 0
+        default: 20
+
+    OffsetQuery:
+      name: offset
+      in: query
+      description: Количество статей, которое необходимо отступить
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+    TagQuery:
+      name: tag
+      in: query
+      description: Фильтровать по тегу
+      schema:
+        type: string
+        example: AngularJS
+
+    AuthorQuery:
+      name: author
+      in: query
+      description: Фильтровать по автору
+      schema:
+        type: string
+        example: jake
+
+    FavoritedQuery:
+      name: favorited
+      in: query
+      description: Избранное пользователем
+      schema:
+        type: string
+        example: jake
+
+  securitySchemes: {bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}}
