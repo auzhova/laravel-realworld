@@ -14,6 +14,12 @@
 
     cd laravel-realworld
 
+Выполнить команду
+
+    make env
+
+Прописать в .env в переменную USER своего пользователя
+
 Выполнить команду для первого запуска
 
     make first-run
@@ -22,4 +28,4 @@
 
 ## API документация
 
-Документация доступна по http://localhost:8080/swagger-doc
+Документация доступна по http://localhost:8080/swagger-docs

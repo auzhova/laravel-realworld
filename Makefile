@@ -19,7 +19,7 @@ up:  ## Запуск контейнеров
 down:  ## Остановка контейнеров
 	@docker-compose down
 
-first-run: env build up  ## Начальная установка приложения
+first-run: build up  ## Начальная установка приложения
 	@docker-compose exec app composer install
 	@docker-compose exec app php artisan key:generate
 	@docker-compose exec app php artisan jwt:secret
